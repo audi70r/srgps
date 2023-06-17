@@ -14,6 +14,8 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
+const sampleRate = 48000
+
 type SoundRequest struct {
 	MP3Link string `json:"mp3Link"`
 }
@@ -50,7 +52,7 @@ func playSound(w http.ResponseWriter, r *http.Request) {
 		defer s.Close()
 
 		// Initialize speaker with sample rate
-		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+		fmt.Printf("Sample rate: %d", format.SampleRate)
 
 		// Play the sound
 		speaker.Play(beep.Seq(s, beep.Callback(func() {
@@ -63,7 +65,18 @@ func playSound(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ping(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "pong")
+}
+
 func main() {
+	speaker.Init(sampleRate, N(sampleRate, time.Second/10))
 	http.HandleFunc("/play-sound", playSound)
+	http.HandleFunc("/ping", ping)
 	log.Fatal(http.ListenAndServe(":44342", nil))
+}
+
+// N returns the number of samples that last for d duration.
+func N(sr, d time.Duration) int {
+	return int(d * time.Duration(sr) / time.Second)
 }
